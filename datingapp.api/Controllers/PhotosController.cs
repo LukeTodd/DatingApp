@@ -28,13 +28,13 @@ namespace datingapp.api.Controllers
         IOptions<CloudinarySettings> cloudinaryConfig)
         {
             _cloudinaryConfig = cloudinaryConfig;
-            _repo = repo;
             _mapper = mapper;
+            _repo = repo;
 
             Account acc = new Account (
                 _cloudinaryConfig.Value.CloudName,
                 _cloudinaryConfig.Value.ApiKey,
-                _cloudinaryConfig.Value.ApiKey
+                _cloudinaryConfig.Value.ApiSecret
             );
 
             _cloudinary = new Cloudinary(acc);
@@ -51,8 +51,8 @@ namespace datingapp.api.Controllers
         }
 
         [HttpPost]
-        [System.Obsolete]
-        public async Task<IActionResult> AddPhotoForUser(int userId, PhotoForCreationDto photoForCreationDto)
+        public async Task<IActionResult> AddPhotoForUser(int userId,
+        [FromForm]PhotoForCreationDto photoForCreationDto)
         {
             if (userId != int.Parse(User.FindFirst(ClaimTypes.NameIdentifier).Value))
             return Unauthorized();
@@ -61,7 +61,7 @@ namespace datingapp.api.Controllers
 
             var file = photoForCreationDto.File;
 
-            var uploadResult = new ImageUploadResult();
+            var uploadResult = new ImageUploadResult(); 
 
             if (file.Length > 0)
             {
@@ -76,9 +76,7 @@ namespace datingapp.api.Controllers
                     uploadResult = _cloudinary.Upload(uploadParams);
                 }
             }
-
-            //uploadResult.Uri is obsolete
-            photoForCreationDto.Url = uploadResult.Uri.ToString();
+            photoForCreationDto.Url = uploadResult.Url.ToString();
             photoForCreationDto.PublicId = uploadResult.PublicId;
 
             var photo = _mapper.Map<Photo>(photoForCreationDto);
